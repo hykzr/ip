@@ -30,6 +30,22 @@ public class Yuan {
                         IntStream.range(0, tasks.size())
                                 .mapToObj(i -> (i + 1) + "." + tasks.get(i))
                                 .toList()));
+            } else if (input.startsWith("mark ")) {
+                int taskNumber = Integer.parseInt(input.substring(5)) - 1;
+                if (taskNumber < 0 || taskNumber >= tasks.size()) {
+                    print("Invalid task number.");
+                    continue;
+                }
+                tasks.get(taskNumber).markAsDone();
+                print("Nice! I've marked this task as done:\n  " + tasks.get(taskNumber));
+            } else if (input.startsWith("unmark ")) {
+                int taskNumber = Integer.parseInt(input.substring(7)) - 1;
+                if (taskNumber < 0 || taskNumber >= tasks.size()) {
+                    print("Invalid task number.");
+                    continue;
+                }
+                tasks.get(taskNumber).markAsNotDone();
+                print("OK, I've marked this task as not done yet:\n  " + tasks.get(taskNumber));
             } else {
                 print(input);
                 tasks.add(new Task(input));
