@@ -22,7 +22,10 @@ public class Yuan {
         // echo until "bye" is received
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            String input = scanner.nextLine();
+            String input = scanner.nextLine().trim();
+            int firstSpaceIndex = input.indexOf(' ');
+            String firstWord = firstSpaceIndex == -1 ? input : input.substring(0, firstSpaceIndex);
+            String restOfInput = firstSpaceIndex == -1 ? "" : input.substring(firstSpaceIndex + 1);
             if (input.equals("bye")) {
                 break;
             } else if (input.equals("list")) {
@@ -30,25 +33,60 @@ public class Yuan {
                         IntStream.range(0, tasks.size())
                                 .mapToObj(i -> (i + 1) + "." + tasks.get(i))
                                 .toList()));
-            } else if (input.startsWith("mark ")) {
-                int taskNumber = Integer.parseInt(input.substring(5)) - 1;
+            }
+            switch (firstWord) {
+            case "todo" -> {
+                Task todo = new ToDo(restOfInput);
+                tasks.add(todo);
+                print("Got it. I've added this task:\n  " + todo + "\nNow you have " + tasks.size() + " tasks in the list.");
+            }
+            case "deadline" -> {
+                String[] parts = restOfInput.split("/by");
+                if (parts.length < 2) {
+                    print("Invalid deadline format. Use: deadline <description> /by <due date>");
+                    continue;
+                }
+                String description = parts[0].trim();
+                String by = parts[1].trim();
+                Task deadline = new Deadline(description, by);
+                tasks.add(deadline);
+                print("Got it. I've added this task:\n  " + deadline + "\nNow you have " + tasks.size() + " tasks in the list.");
+            }
+            case "event" -> {
+                String[] parts = restOfInput.split("/from|/to");
+                if (parts.length < 3) {
+                    print("Invalid event format. Use: event <description> /from <start time> /to <end time>");
+                    continue;
+                }
+                String description = parts[0].trim();
+                String from = parts[1].trim();
+                String to = parts[2].trim();
+                Task event = new Event(description, from, to);
+                tasks.add(event);
+                print("Got it. I've added this task:\n  " + event + "\nNow you have " + tasks.size() + " tasks in the list.");
+            }
+            case "mark" -> {
+                int taskNumber = Integer.parseInt(restOfInput) - 1;
                 if (taskNumber < 0 || taskNumber >= tasks.size()) {
                     print("Invalid task number.");
                     continue;
                 }
                 tasks.get(taskNumber).markAsDone();
                 print("Nice! I've marked this task as done:\n  " + tasks.get(taskNumber));
-            } else if (input.startsWith("unmark ")) {
-                int taskNumber = Integer.parseInt(input.substring(7)) - 1;
+            }
+            case "unmark" -> {
+                int taskNumber = Integer.parseInt(restOfInput) - 1;
                 if (taskNumber < 0 || taskNumber >= tasks.size()) {
                     print("Invalid task number.");
                     continue;
                 }
                 tasks.get(taskNumber).markAsNotDone();
                 print("OK, I've marked this task as not done yet:\n  " + tasks.get(taskNumber));
-            } else {
+            }
+            default -> {
                 print(input);
                 tasks.add(new Task(input));
+            }
             }
         }
 
