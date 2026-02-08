@@ -1,112 +1,148 @@
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.stream.IntStream;
 
 public class Yuan {
-    private static void print(String message) {
-        System.out.println("____________________________________________________________");
+    private static final String SEPARATOR = "____________________________________________________________";
+    private static final String GREETINGS = "Hello! I'm Yuan.\nWhat can I do for you?";
+    private static final String GOODBYE = "Bye. Hope to see you again soon!";
+    private static final String COMMAND_BYE = "bye";
+    private static final String COMMAND_LIST = "list";
+    private static final String COMMAND_TODO = "todo";
+    private static final String COMMAND_DEADLINE = "deadline";
+    private static final String COMMAND_EVENT = "event";
+    private static final String COMMAND_MARK = "mark";
+    private static final String COMMAND_UNMARK = "unmark";
+
+    private static void printBox(String message) {
+        System.out.println(SEPARATOR);
         System.out.println(message);
-        System.out.println("____________________________________________________________\n");
+        System.out.println(SEPARATOR + System.lineSeparator());
     }
 
     public static void main(String[] args) {
-        String greetings = """
-                Hello! I'm Yuan.
-                What can I do for you?""";
-        String bye = "Bye. Hope to see you again soon!";
-        print(greetings);
+        printBox(GREETINGS);
+        List<Task> tasks = new ArrayList<>();
 
-        // array to store each user input tasks
-        ArrayList<Task> tasks = new ArrayList<>();
+        try (Scanner scanner = new Scanner(System.in)) {
+            while (true) {
+                String input = scanner.nextLine().trim();
+                String commandWord = getFirstWord(input);
+                String restOfInput = getRestOfInput(input);
 
-        // echo until "bye" is received
-        Scanner scanner = new Scanner(System.in);
-        while (true) {
-            String input = scanner.nextLine().trim();
-            int firstSpaceIndex = input.indexOf(' ');
-            String firstWord = firstSpaceIndex == -1 ? input : input.substring(0, firstSpaceIndex);
-            String restOfInput = firstSpaceIndex == -1 ? "" : input.substring(firstSpaceIndex + 1);
-            if (input.equals("bye")) {
-                break;
-            } else if (input.equals("list")) {
-                String listOutput = String.join(System.lineSeparator(),
-                        IntStream.range(0, tasks.size())
-                                .mapToObj(i -> (i + 1) + "." + tasks.get(i))
-                                .toList());
-                print(listOutput);
-            }
-            switch (firstWord) {
-                case "todo" -> {
-                    Task todo = new ToDo(restOfInput);
-                    tasks.add(todo);
-                    String message = String.format(
-                            "Got it. I've added this task:%n  %s%nNow you have %d tasks in the list.",
-                            todo, tasks.size());
-                    print(message);
+                if (COMMAND_BYE.equals(commandWord) && restOfInput.isEmpty()) {
+                    printBox(GOODBYE);
+                    return;
                 }
-                case "deadline" -> {
-                    String[] parts = restOfInput.split("/by");
-                    if (parts.length < 2) {
-                        print("Invalid deadline format. Use: deadline <description> /by <due date>");
-                        continue;
-                    }
-                    String description = parts[0].trim();
-                    String by = parts[1].trim();
-                    Task deadline = new Deadline(description, by);
-                    tasks.add(deadline);
-                    String message = String.format(
-                            "Got it. I've added this task:%n  %s%nNow you have %d tasks in the list.",
-                            deadline, tasks.size());
-                    print(message);
-                }
-                case "event" -> {
-                    String[] parts = restOfInput.split("/from|/to");
-                    if (parts.length < 3) {
-                        print("Invalid event format. Use: event <description> /from <start time> /to <end time>");
-                        continue;
-                    }
-                    String description = parts[0].trim();
-                    String from = parts[1].trim();
-                    String to = parts[2].trim();
-                    Task event = new Event(description, from, to);
-                    tasks.add(event);
-                    String message = String.format(
-                            "Got it. I've added this task:%n  %s%nNow you have %d tasks in the list.",
-                            event, tasks.size());
-                    print(message);
-                }
-                case "mark" -> {
-                    int taskNumber = Integer.parseInt(restOfInput) - 1;
-                    if (taskNumber < 0 || taskNumber >= tasks.size()) {
-                        print("Invalid task number.");
-                        continue;
-                    }
-                    tasks.get(taskNumber).markAsDone();
-                    String message = String.format(
-                            "Nice! I've marked this task as done:%n  %s",
-                            tasks.get(taskNumber));
-                    print(message);
-                }
-                case "unmark" -> {
-                    int taskNumber = Integer.parseInt(restOfInput) - 1;
-                    if (taskNumber < 0 || taskNumber >= tasks.size()) {
-                        print("Invalid task number.");
-                        continue;
-                    }
-                    tasks.get(taskNumber).markAsNotDone();
-                    String message = String.format(
-                            "OK, I've marked this task as not done yet:%n  %s",
-                            tasks.get(taskNumber));
-                    print(message);
-                }
-                default -> {
-                    print(input);
-                    tasks.add(new Task(input));
+
+                switch (commandWord) {
+                    case COMMAND_LIST -> printTaskList(tasks);
+                    case COMMAND_TODO -> addTodo(restOfInput, tasks);
+                    case COMMAND_DEADLINE -> addDeadline(restOfInput, tasks);
+                    case COMMAND_EVENT -> addEvent(restOfInput, tasks);
+                    case COMMAND_MARK -> markTask(restOfInput, tasks);
+                    case COMMAND_UNMARK -> unmarkTask(restOfInput, tasks);
+                    default -> handleUnknownCommand(input, tasks);
                 }
             }
         }
+    }
 
-        print(bye);
-        scanner.close();
+    private static void printTaskList(List<Task> tasks) {
+        String listOutput = String.join(System.lineSeparator(),
+                IntStream.range(0, tasks.size())
+                        .mapToObj(i -> (i + 1) + "." + tasks.get(i))
+                        .toList());
+        printBox(listOutput);
+    }
+
+    private static void addTodo(String restOfInput, List<Task> tasks) {
+        Task todo = new ToDo(restOfInput);
+        addTask(todo, tasks);
+    }
+
+    private static void addDeadline(String restOfInput, List<Task> tasks) {
+        String[] parts = restOfInput.split("/by", 2);
+        if (parts.length < 2) {
+            printBox("Invalid deadline format. Use: deadline <description> /by <due date>");
+            return;
+        }
+        String description = parts[0].trim();
+        String by = parts[1].trim();
+        Task deadline = new Deadline(description, by);
+        addTask(deadline, tasks);
+    }
+
+    private static void addEvent(String restOfInput, List<Task> tasks) {
+        String[] parts = restOfInput.split("/from|/to");
+        if (parts.length < 3) {
+            printBox("Invalid event format. Use: event <description> /from <start time> /to <end time>");
+            return;
+        }
+        String description = parts[0].trim();
+        String from = parts[1].trim();
+        String to = parts[2].trim();
+        Task event = new Event(description, from, to);
+        addTask(event, tasks);
+    }
+
+    private static void markTask(String restOfInput, List<Task> tasks) {
+        int taskIndex = parseTaskIndex(restOfInput, tasks.size());
+        if (taskIndex == -1) {
+            printBox("Invalid task number.");
+            return;
+        }
+        tasks.get(taskIndex).markAsDone();
+        String message = String.format("Nice! I've marked this task as done:%n  %s",
+                tasks.get(taskIndex));
+        printBox(message);
+    }
+
+    private static void unmarkTask(String restOfInput, List<Task> tasks) {
+        int taskIndex = parseTaskIndex(restOfInput, tasks.size());
+        if (taskIndex == -1) {
+            printBox("Invalid task number.");
+            return;
+        }
+        tasks.get(taskIndex).markAsNotDone();
+        String message = String.format("OK, I've marked this task as not done yet:%n  %s",
+                tasks.get(taskIndex));
+        printBox(message);
+    }
+
+    private static int parseTaskIndex(String restOfInput, int taskCount) {
+        try {
+            int taskIndex = Integer.parseInt(restOfInput.trim()) - 1;
+            if (taskIndex < 0 || taskIndex >= taskCount) {
+                return -1;
+            }
+            return taskIndex;
+        } catch (NumberFormatException e) {
+            return -1;
+        }
+    }
+
+    private static void addTask(Task task, List<Task> tasks) {
+        tasks.add(task);
+        String message = String.format(
+                "Got it. I've added this task:%n  %s%nNow you have %d tasks in the list.",
+                task, tasks.size());
+        printBox(message);
+    }
+
+    private static void handleUnknownCommand(String input, List<Task> tasks) {
+        printBox(input);
+        tasks.add(new Task(input));
+    }
+
+    private static String getFirstWord(String input) {
+        int firstSpaceIndex = input.indexOf(' ');
+        return firstSpaceIndex == -1 ? input : input.substring(0, firstSpaceIndex);
+    }
+
+    private static String getRestOfInput(String input) {
+        int firstSpaceIndex = input.indexOf(' ');
+        return firstSpaceIndex == -1 ? "" : input.substring(firstSpaceIndex + 1);
     }
 }
