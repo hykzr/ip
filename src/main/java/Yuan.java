@@ -136,7 +136,7 @@ public class Yuan {
         try {
             int taskIndex = Integer.parseInt(trimmedInput) - 1;
             if (taskIndex < 0 || taskIndex >= taskCount) {
-                throw new CommandFormatException(ERROR_TASK_NUMBER_RANGE);
+                throw new CommandRangeException(ERROR_TASK_NUMBER_RANGE);
             }
             return taskIndex;
         } catch (NumberFormatException e) {
