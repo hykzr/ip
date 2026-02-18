@@ -8,6 +8,7 @@ public class TaskManager {
     public static final String COMMAND_EVENT = "event";
     public static final String COMMAND_MARK = "mark";
     public static final String COMMAND_UNMARK = "unmark";
+    public static final String COMMAND_DELETE = "delete";
     public static final String COMMAND_LIST = "list";
 
     private final List<Task> tasks;
@@ -94,6 +95,14 @@ public class TaskManager {
         tasks.get(taskIndex).markAsNotDone();
         String message = String.format("OK, I've marked this task as not done yet:%n  %s",
                 tasks.get(taskIndex));
+        printBox(message);
+    }
+
+    public void deleteTask(String args) throws CommandException {
+        int taskIndex = parseTaskIndex(args);
+        Task removedTask = tasks.remove(taskIndex);
+        String message = String.format("Noted. I've removed this task:%n  %s%nNow you have %d tasks in the list.",
+                removedTask, tasks.size());
         printBox(message);
     }
 
