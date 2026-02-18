@@ -57,6 +57,7 @@ public class TaskManager {
         }
 
         try (Scanner scanner = new Scanner(file)) {
+            tasks.clear();
             while (scanner.hasNextLine()) {
                 String line = scanner.nextLine();
                 try {
