@@ -39,6 +39,8 @@ public class Yuan {
                     case TaskManager.COMMAND_MARK -> taskManager.markTask(restOfInput);
                     case TaskManager.COMMAND_UNMARK -> taskManager.unmarkTask(restOfInput);
                     case TaskManager.COMMAND_DELETE -> taskManager.deleteTask(restOfInput);
+                    case TaskManager.COMMAND_SAVE -> taskManager.saveTasks();
+                    case TaskManager.COMMAND_LOAD -> taskManager.loadTasks();
                     default -> handleUnknownCommand(input);
                     }
                 } catch (CommandException e) {
