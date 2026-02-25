@@ -1,20 +1,11 @@
 import java.util.Scanner;
 
 public class Yuan {
-    private static final String SEPARATOR = "____________________________________________________________";
-    private static final String GREETINGS = "Hello! I'm Yuan.\nWhat can I do for you?";
-    private static final String GOODBYE = "Bye. Hope to see you again soon!";
-
-    private static final TaskList taskManager = new TaskList();
-
-    private static void printBox(String message) {
-        System.out.println(SEPARATOR);
-        System.out.println(message);
-        System.out.println(SEPARATOR + System.lineSeparator());
-    }
+    private static final Ui ui = new Ui();
+    private static final TaskList taskManager = new TaskList(ui);
 
     public static void main(String[] args) {
-        printBox(GREETINGS);
+        ui.showGreeting();
 
         try (Scanner scanner = new Scanner(System.in)) {
             while (true) {
@@ -23,7 +14,7 @@ public class Yuan {
                 String restOfInput = Parser.getRestOfInput(input);
 
                 if (Parser.COMMAND_BYE.equals(commandWord) && restOfInput.isEmpty()) {
-                    printBox(GOODBYE);
+                    ui.showGoodbye();
                     return;
                 }
 
@@ -44,7 +35,7 @@ public class Yuan {
                     default -> Parser.handleUnknownCommand(input);
                     }
                 } catch (CommandException e) {
-                    printBox(e.getMessage());
+                    ui.showMessage(e.getMessage());
                 }
             }
         }

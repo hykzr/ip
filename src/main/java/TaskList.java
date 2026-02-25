@@ -5,18 +5,17 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 
 public class TaskList {
     private static final String FILE_PATH = "./data/yuan.txt";
     private static final String DATA_DIR = "./data";
 
     private final List<Task> tasks;
+    private final Ui ui;
 
-    private static final String SEPARATOR = "____________________________________________________________";
-
-    public TaskList() {
+    public TaskList(Ui ui) {
         this.tasks = new ArrayList<>();
+        this.ui = ui;
         loadTasks();
     }
 
@@ -24,9 +23,9 @@ public class TaskList {
         File dataDir = new File(DATA_DIR);
         if (!dataDir.exists()) {
             if (dataDir.mkdirs()) {
-                System.out.println("Data directory created successfully.");
+                ui.showDataDirectoryCreated();
             } else {
-                System.out.println("Failed to create data directory.");
+                ui.showDataDirectoryCreateFailed();
             }
         }
     }
@@ -49,12 +48,12 @@ public class TaskList {
                         tasks.add(task);
                     }
                 } catch (Exception e) {
-                    System.out.println("Error parsing line: " + line);
+                    ui.showLine("Error parsing line: " + line);
                 }
             }
-            printBox("Tasks loaded successfully.");
+            ui.showTasksLoaded();
         } catch (FileNotFoundException e) {
-            System.out.println("Data file not found: " + e.getMessage());
+            ui.showLine("Data file not found: " + e.getMessage());
         }
     }
 
@@ -66,24 +65,14 @@ public class TaskList {
                 writer.write(task.toFileFormat() + System.lineSeparator());
             }
             writer.close();
-            printBox("Tasks saved successfully.");
+            ui.showTasksSaved();
         } catch (IOException e) {
-            System.out.println("Error saving tasks: " + e.getMessage());
+            ui.showLine("Error saving tasks: " + e.getMessage());
         }
     }
 
-    private void printBox(String message) {
-        System.out.println(SEPARATOR);
-        System.out.println(message);
-        System.out.println(SEPARATOR + System.lineSeparator());
-    }
-
     public void printTaskList() {
-        String listOutput = String.join(System.lineSeparator(),
-                IntStream.range(0, tasks.size())
-                        .mapToObj(i -> (i + 1) + "." + tasks.get(i))
-                        .toList());
-        printBox(listOutput);
+        ui.showTaskList(tasks);
     }
 
     public int getTaskCount() {
@@ -93,33 +82,24 @@ public class TaskList {
     public void markTask(int taskIndex) {
         tasks.get(taskIndex).markAsDone();
         saveTasks();
-        String message = String.format("Nice! I've marked this task as done:%n  %s",
-                tasks.get(taskIndex));
-        printBox(message);
+        ui.showTaskMarked(tasks.get(taskIndex));
     }
 
     public void unmarkTask(int taskIndex) {
         tasks.get(taskIndex).markAsNotDone();
         saveTasks();
-        String message = String.format("OK, I've marked this task as not done yet:%n  %s",
-                tasks.get(taskIndex));
-        printBox(message);
+        ui.showTaskUnmarked(tasks.get(taskIndex));
     }
 
     public void deleteTask(int taskIndex) {
         Task removedTask = tasks.remove(taskIndex);
         saveTasks();
-        String message = String.format("Noted. I've removed this task:%n  %s%nNow you have %d tasks in the list.",
-                removedTask, tasks.size());
-        printBox(message);
+        ui.showTaskDeleted(removedTask, tasks.size());
     }
 
     public void addTask(Task task) {
         tasks.add(task);
         saveTasks();
-        String message = String.format(
-                "Got it. I've added this task:%n  %s%nNow you have %d tasks in the list.",
-                task, tasks.size());
-        printBox(message);
+        ui.showTaskAdded(task, tasks.size());
     }
 }
