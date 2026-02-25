@@ -1,10 +1,20 @@
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Yuan {
-    private static final Ui ui = new Ui();
-    private static final TaskList taskManager = new TaskList(ui);
-
     public static void main(String[] args) {
+        Ui ui = new Ui();
+        Storage storage = new Storage(ui);
+        TaskList taskManager;
+
+        try {
+            ArrayList<Task> tasks = storage.load();
+            taskManager = new TaskList(tasks, ui);
+        } catch (StorageError e) {
+            ui.showMessage(e.getMessage());
+            taskManager = new TaskList(ui);
+        }
+
         ui.showGreeting();
 
         try (Scanner scanner = new Scanner(System.in)) {
@@ -30,11 +40,14 @@ public class Yuan {
                             Parser.parseTaskIndex(restOfInput, taskManager.getTaskCount()));
                     case Parser.COMMAND_DELETE -> taskManager.deleteTask(
                             Parser.parseTaskIndex(restOfInput, taskManager.getTaskCount()));
-                    case Parser.COMMAND_SAVE -> taskManager.saveTasks();
-                    case Parser.COMMAND_LOAD -> taskManager.loadTasks();
+                    case Parser.COMMAND_SAVE -> storage.save(taskManager.getTasks());
+                    case Parser.COMMAND_LOAD -> {
+                        ArrayList<Task> tasks = storage.load();
+                        taskManager.replaceTasks(tasks);
+                    }
                     default -> Parser.handleUnknownCommand(input);
                     }
-                } catch (CommandException e) {
+                } catch (CommandException | StorageError e) {
                     ui.showMessage(e.getMessage());
                 }
             }
