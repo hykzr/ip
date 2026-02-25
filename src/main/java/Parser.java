@@ -139,4 +139,25 @@ public class Parser {
         }
         return task;
     }
+
+    public static Command parseCommand(String input) throws CommandException {
+        if (input == null || input.trim().isEmpty()) {
+            return null;
+        }
+        String trimmedInput = input.trim();
+        String commandWord = getFirstWord(trimmedInput);
+        String restOfInput = getRestOfInput(trimmedInput);
+
+        return switch (commandWord) {
+            case COMMAND_TODO, COMMAND_DEADLINE, COMMAND_EVENT -> new AddCommand(parseTask(commandWord, restOfInput));
+            case COMMAND_LIST -> new ListCommand();
+            case COMMAND_MARK -> new MarkCommand(restOfInput);
+            case COMMAND_UNMARK -> new UnmarkCommand(restOfInput);
+            case COMMAND_DELETE -> new DeleteCommand(restOfInput);
+            case COMMAND_SAVE -> new SaveCommand();
+            case COMMAND_LOAD -> new LoadCommand();
+            case COMMAND_BYE -> new ExitCommand();
+            default -> null;
+        };
+    }
 }
