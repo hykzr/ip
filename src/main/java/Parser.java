@@ -4,6 +4,10 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 
+/**
+ * Parses user input and converts it into commands or tasks.
+ * Handles parsing of dates, times, and command arguments.
+ */
 public class Parser {
     public static final String COMMAND_TODO = "todo";
     public static final String COMMAND_DEADLINE = "deadline";
@@ -44,6 +48,10 @@ public class Parser {
     /**
      * Parses a date/time string using several accepted formats.
      * Returns a LocalDateTime (dates without a time component default to midnight).
+     *
+     * @param raw The raw date/time string.
+     * @return The parsed LocalDateTime.
+     * @throws CommandFormatException If the date/time format is invalid.
      */
     private static LocalDateTime parseDateTime(String raw) throws CommandFormatException {
         String trimmed = raw.trim();
@@ -63,16 +71,38 @@ public class Parser {
         throw new CommandFormatException(ERROR_INVALID_DATETIME);
     }
 
+    /**
+     * Extracts the first word from the input string.
+     * This is typically the command keyword.
+     *
+     * @param input The input string.
+     * @return The first word.
+     */
     public static String getFirstWord(String input) {
         int firstSpaceIndex = input.indexOf(' ');
         return firstSpaceIndex == -1 ? input : input.substring(0, firstSpaceIndex);
     }
 
+    /**
+     * Extracts the rest of the input string after the first word.
+     * This typically contains the arguments for the command.
+     *
+     * @param input The input string.
+     * @return The rest of the input string, or an empty string if there are no arguments.
+     */
     public static String getRestOfInput(String input) {
         int firstSpaceIndex = input.indexOf(' ');
         return firstSpaceIndex == -1 ? "" : input.substring(firstSpaceIndex + 1);
     }
 
+    /**
+     * Parses a task command and creates a Task object.
+     *
+     * @param commandWord The command keyword (todo, deadline, event).
+     * @param args        The arguments for the task command.
+     * @return The created Task object.
+     * @throws CommandException If the task command is invalid.
+     */
     public static Task parseTask(String commandWord, String args) throws CommandException {
         return switch (commandWord) {
             case COMMAND_TODO -> parseTodo(args);
@@ -82,6 +112,13 @@ public class Parser {
         };
     }
 
+    /**
+     * Parses a todo command arguments.
+     *
+     * @param args The arguments.
+     * @return The ToDo task.
+     * @throws CommandException If arguments are invalid.
+     */
     private static Task parseTodo(String args) throws CommandException {
         if (args.trim().isEmpty()) {
             throw new CommandFormatException(ERROR_TODO_EMPTY);
@@ -89,6 +126,13 @@ public class Parser {
         return new ToDo(args.trim());
     }
 
+    /**
+     * Parses a deadline command arguments.
+     *
+     * @param args The arguments.
+     * @return The Deadline task.
+     * @throws CommandException If arguments are invalid.
+     */
     private static Task parseDeadline(String args) throws CommandException {
         if (args.trim().isEmpty()) {
             throw new CommandFormatException(ERROR_DEADLINE_FORMAT);
@@ -106,6 +150,13 @@ public class Parser {
         return new Deadline(description, by);
     }
 
+    /**
+     * Parses an event command arguments.
+     *
+     * @param args The arguments.
+     * @return The Event task.
+     * @throws CommandException If arguments are invalid.
+     */
     private static Task parseEvent(String args) throws CommandException {
         if (args.trim().isEmpty()) {
             throw new CommandFormatException(ERROR_EVENT_FORMAT);
@@ -125,6 +176,14 @@ public class Parser {
         return new Event(description, from, to);
     }
 
+    /**
+     * Parses a task index from the arguments.
+     *
+     * @param args      The arguments containing the task number.
+     * @param taskCount The total number of tasks currently in the list (for range checking).
+     * @return The 0-based index of the task.
+     * @throws CommandException If the task number is missing, invalid, or out of range.
+     */
     public static int parseTaskIndex(String args, int taskCount) throws CommandException {
         String trimmedInput = args.trim();
         if (trimmedInput.isEmpty()) {
@@ -141,6 +200,12 @@ public class Parser {
         }
     }
 
+    /**
+     * Handles unknown commands by throwing an exception.
+     *
+     * @param input The unknown command input.
+     * @throws CommandException Always throws, detailing the error.
+     */
     public static void handleUnknownCommand(String input) throws CommandException {
         if (input.isBlank()) {
             throw new CommandException(ERROR_EMPTY_COMMAND);
@@ -148,6 +213,12 @@ public class Parser {
         throw new CommandException(ERROR_UNKNOWN_COMMAND);
     }
 
+    /**
+     * Parses a line from the storage file into a Task object.
+     *
+     * @param line The line from the file.
+     * @return The Task object, or null if the line cannot be parsed.
+     */
     public static Task parseStoredTaskLine(String line) {
         String[] parts = line.split(" \\| ");
         if (parts.length < 3) {
@@ -194,6 +265,13 @@ public class Parser {
         return task;
     }
 
+    /**
+     * Parses a full command input string into a Command object.
+     *
+     * @param input The full user input.
+     * @return The corresponding Command object, or null if input is empty.
+     * @throws CommandException If the command is invalid or arguments are incorrect.
+     */
     public static Command parseCommand(String input) throws CommandException {
         if (input == null || input.trim().isEmpty()) {
             return null;

@@ -1,7 +1,17 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * Main class for the Yuan application.
+ * Starts the application by initializing the UI, Storage, and TaskList,
+ * and enters the main command loop.
+ */
 public class Yuan {
+    /**
+     * Main entry point of the application.
+     *
+     * @param args Command line arguments (not used).
+     */
     public static void main(String[] args) {
         Ui ui = new Ui();
         Storage storage = new Storage(ui);
