@@ -71,6 +71,19 @@ public class Ui {
         printBox(message);
     }
 
+    public void showFoundTasks(List<Task> tasks) {
+        if (tasks.isEmpty()) {
+            printBox("No matching tasks found.");
+            return;
+        }
+        String listOutput = "Here are the matching tasks in your list:" + System.lineSeparator()
+                + String.join(System.lineSeparator(),
+                IntStream.range(0, tasks.size())
+                        .mapToObj(i -> (i + 1) + "." + tasks.get(i))
+                        .toList());
+        printBox(listOutput);
+    }
+
     public void showMessage(String message) {
         printBox(message);
     }

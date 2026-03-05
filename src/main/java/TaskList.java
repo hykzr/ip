@@ -51,4 +51,11 @@ public class TaskList {
         tasks.add(task);
         ui.showTaskAdded(task, tasks.size());
     }
+
+    public void findTasks(String keyword) {
+        List<Task> matched = tasks.stream()
+                .filter(t -> t.description.toLowerCase().contains(keyword.toLowerCase()))
+                .toList();
+        ui.showFoundTasks(matched);
+    }
 }

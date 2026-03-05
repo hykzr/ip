@@ -15,6 +15,7 @@ public class Parser {
     public static final String COMMAND_SAVE = "save";
     public static final String COMMAND_LOAD = "load";
     public static final String COMMAND_BYE = "bye";
+    public static final String COMMAND_FIND = "find";
 
     private static final String ERROR_TODO_EMPTY = "A todo needs a description.";
     private static final String ERROR_DEADLINE_FORMAT = "A deadline needs a description and '/by <time>'.";
@@ -210,6 +211,7 @@ public class Parser {
             case COMMAND_SAVE -> new SaveCommand();
             case COMMAND_LOAD -> new LoadCommand();
             case COMMAND_BYE -> new ExitCommand();
+            case COMMAND_FIND -> new FindCommand(restOfInput);
             default -> null;
         };
     }
