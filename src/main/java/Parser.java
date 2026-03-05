@@ -1,3 +1,9 @@
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.List;
+
 public class Parser {
     public static final String COMMAND_TODO = "todo";
     public static final String COMMAND_DEADLINE = "deadline";
@@ -18,10 +24,42 @@ public class Parser {
     private static final String ERROR_TASK_NUMBER_NOT_NUMBER = "Task numbers must be whole numbers.";
     private static final String ERROR_UNKNOWN_COMMAND = "Sorry, I do not recognize that command.";
     private static final String ERROR_EMPTY_COMMAND = "Please enter a command.";
+    private static final String ERROR_INVALID_DATETIME =
+            "Invalid date/time format. Use d/M/yyyy HHmm (e.g., 2/12/2019 1800) or yyyy-MM-dd HHmm.";
 
     private static final String STORAGE_TODO = "T";
     private static final String STORAGE_DEADLINE = "D";
     private static final String STORAGE_EVENT = "E";
+
+    // Accepted input formats (date+time and date-only)
+    private static final List<DateTimeFormatter> INPUT_FORMATS = List.of(
+            DateTimeFormatter.ofPattern("d/M/yyyy HHmm"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm"),
+            DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    );
+    private static final DateTimeFormatter STORAGE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm");
+
+    /**
+     * Parses a date/time string using several accepted formats.
+     * Returns a LocalDateTime (dates without a time component default to midnight).
+     */
+    private static LocalDateTime parseDateTime(String raw) throws CommandFormatException {
+        String trimmed = raw.trim();
+        for (DateTimeFormatter fmt : INPUT_FORMATS) {
+            try {
+                // Try full date-time first
+                return LocalDateTime.parse(trimmed, fmt);
+            } catch (DateTimeParseException e1) {
+                // Try as date-only (no time component)
+                try {
+                    return LocalDate.parse(trimmed, fmt).atStartOfDay();
+                } catch (DateTimeParseException ignored) {
+                    // try next format
+                }
+            }
+        }
+        throw new CommandFormatException(ERROR_INVALID_DATETIME);
+    }
 
     public static String getFirstWord(String input) {
         int firstSpaceIndex = input.indexOf(' ');
@@ -58,10 +96,11 @@ public class Parser {
             throw new CommandFormatException(ERROR_DEADLINE_FORMAT);
         }
         String description = parts[0].trim();
-        String by = parts[1].trim();
-        if (description.isEmpty() || by.isEmpty()) {
+        String byRaw = parts[1].trim();
+        if (description.isEmpty() || byRaw.isEmpty()) {
             throw new CommandFormatException(ERROR_DEADLINE_FORMAT);
         }
+        LocalDateTime by = parseDateTime(byRaw);
         return new Deadline(description, by);
     }
 
@@ -74,11 +113,13 @@ public class Parser {
             throw new CommandFormatException(ERROR_EVENT_FORMAT);
         }
         String description = parts[0].trim();
-        String from = parts[1].trim();
-        String to = parts[2].trim();
-        if (description.isEmpty() || from.isEmpty() || to.isEmpty()) {
+        String fromRaw = parts[1].trim();
+        String toRaw = parts[2].trim();
+        if (description.isEmpty() || fromRaw.isEmpty() || toRaw.isEmpty()) {
             throw new CommandFormatException(ERROR_EVENT_FORMAT);
         }
+        LocalDateTime from = parseDateTime(fromRaw);
+        LocalDateTime to = parseDateTime(toRaw);
         return new Event(description, from, to);
     }
 
@@ -122,12 +163,23 @@ public class Parser {
             break;
         case STORAGE_DEADLINE:
             if (parts.length >= 4) {
-                task = new Deadline(description, parts[3]);
+                try {
+                    LocalDateTime by = LocalDateTime.parse(parts[3].trim(), STORAGE_FORMAT);
+                    task = new Deadline(description, by);
+                } catch (DateTimeParseException e) {
+                    return null;
+                }
             }
             break;
         case STORAGE_EVENT:
             if (parts.length >= 5) {
-                task = new Event(description, parts[3], parts[4]);
+                try {
+                    LocalDateTime from = LocalDateTime.parse(parts[3].trim(), STORAGE_FORMAT);
+                    LocalDateTime to = LocalDateTime.parse(parts[4].trim(), STORAGE_FORMAT);
+                    task = new Event(description, from, to);
+                } catch (DateTimeParseException e) {
+                    return null;
+                }
             }
             break;
         default:
