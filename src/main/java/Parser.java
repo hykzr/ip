@@ -34,6 +34,7 @@ public class Parser {
     // Accepted input formats (date+time and date-only)
     private static final List<DateTimeFormatter> INPUT_FORMATS = List.of(
             DateTimeFormatter.ofPattern("d/M/yyyy HHmm"),
+            DateTimeFormatter.ofPattern("d/M/yyyy"),
             DateTimeFormatter.ofPattern("yyyy-MM-dd HHmm"),
             DateTimeFormatter.ofPattern("yyyy-MM-dd")
     );
